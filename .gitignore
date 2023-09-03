@@ -1,0 +1,5 @@
+# Microsoft Visual Studio files/folders
+.vs/
+
+# Builts and binaries
+out/

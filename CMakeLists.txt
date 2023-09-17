@@ -19,3 +19,11 @@ option (BUILD_SHARED_LIBS "Building shared libraries" ON)
 
 add_subdirectory ("Chopper")
 add_subdirectory ("Testbed")
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	target_compile_definitions (Chopper PRIVATE "DEBUG_BUILD")
+	target_compile_definitions (Testbed PRIVATE "DEBUG_BUILD")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
+	target_compile_definitions (Chopper PRIVATE "RELEASE_BUILD")
+	target_compile_definitions (Testbed PRIVATE "RELEASE_BUILD")
+endif()

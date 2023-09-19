@@ -2,6 +2,8 @@
 
 #include <core/Event.h>
 
+#include <sstream>
+
 namespace Chopper {
 
 	class CHOPPER_API WindowCloseEvent : public Event {
@@ -23,6 +25,12 @@ namespace Chopper {
 
 		static EventType GetStaticType() { return EventType::WindowResize; }
 		EventType GetEventType() const override { return GetStaticType(); }
+
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": (" << m_Width << ", " << m_Height << ")";
+			return ss.str();
+		}
 
 	private:
 		uint32_t m_Width, m_Height;

@@ -1,11 +1,7 @@
 #pragma once
 
 #include <common/definitions.h>
-
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
+#include <common/includes.h>
 
 namespace Chopper {
 
@@ -32,8 +28,7 @@ namespace Chopper {
 
 		virtual EventType GetEventType() const = 0;
 		std::string GetName() const { return m_Name; }
-
-		friend std::ostream& operator<<(std::ostream& os, const Event& e);
+		virtual std::string GetStateLog() const { return GetName(); }
 
 	protected:
 		std::string m_Name;
@@ -57,7 +52,7 @@ namespace Chopper {
 		Event& m_Event;
 	};
 
-	std::ostream& operator<<(std::ostream& os, const Event& e) {
-		return os << e.m_Name;
+	inline std::ostream& operator<<(std::ostream& os, const Event& e) {
+		return os << e.GetStateLog();
 	}
 }

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-
-#include <memory>
+#include <spdlog/fmt/ostr.h>
 
 #include <common/definitions.h>
+#include <common/includes.h>
 
 namespace Chopper {
 	
@@ -13,6 +13,7 @@ namespace Chopper {
 		static void Init();
 
 		inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
+
 	private:
 		static std::shared_ptr<spdlog::logger> s_Logger;
 	};

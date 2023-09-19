@@ -2,11 +2,19 @@
 
 #include <core/Event.h>
 
+#include <sstream>
+
 namespace Chopper {
 
 	class CHOPPER_API MouseButtonEvent : public Event {
 	public:
 		inline int GetMouseButton() const { return m_MouseButton; }
+
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": " << m_MouseButton;
+			return ss.str();
+		}
 
 	protected:
 		MouseButtonEvent(int button, std::string name)
@@ -30,7 +38,7 @@ namespace Chopper {
 			: MouseButtonEvent(button, "MouseButtonReleased") {}
 
 		static EventType GetStaticType() { return EventType::MouseButtonReleased; }
-		EventType GetEventType() const override { return GetEventType(); }
+		EventType GetEventType() const override { return GetStaticType(); }
 	};
 
 
@@ -46,6 +54,12 @@ namespace Chopper {
 		static EventType GetStaticType() { return EventType::MouseMoved; }
 		EventType GetEventType() const override { return GetStaticType(); }
 
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": (" << m_MouseX << ", " << m_MouseY << ")";
+			return ss.str();
+		}
+
 	private:
 		float m_MouseX, m_MouseY;
 	};
@@ -60,6 +74,12 @@ namespace Chopper {
 
 		static EventType GetStaticType() { return EventType::MouseWheel; }
 		EventType GetEventType() const override { return GetStaticType(); }
+
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": (" << m_XOffset << ", " << m_YOffset << ")";
+			return ss.str();
+		}
 
 	private:
 		float m_XOffset, m_YOffset;

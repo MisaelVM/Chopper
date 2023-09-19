@@ -3,6 +3,7 @@
   "name": "chopper",
   "version-string": "0.1.0",
   "dependencies": [
-    "spdlog"
+    "spdlog",
+    "glfw3"
   ]
 }

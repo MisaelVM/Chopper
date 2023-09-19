@@ -2,6 +2,8 @@
 
 #include <core/Event.h>
 
+#include <sstream>
+
 namespace Chopper {
 
 	class CHOPPER_API KeyEvent : public Event {
@@ -23,7 +25,13 @@ namespace Chopper {
 		inline int GetRepeatCount() const { return m_RepeatCount; }
 
 		static EventType GetStaticType() { return EventType::KeyPressed; }
-		EventType GetEventType() const override { return GetEventType(); }
+		EventType GetEventType() const override { return GetStaticType(); }
+
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": " << m_KeyCode << " (" << m_RepeatCount << ")";
+			return ss.str();
+		}
 
 	private:
 		int m_RepeatCount;
@@ -36,5 +44,11 @@ namespace Chopper {
 
 		static EventType GetStaticType() { return EventType::KeyReleased; }
 		EventType GetEventType() const override { return GetStaticType(); }
+
+		std::string GetStateLog() const override {
+			std::stringstream ss;
+			ss << m_Name << ": " << m_KeyCode;
+			return ss.str();
+		}
 	};
 }

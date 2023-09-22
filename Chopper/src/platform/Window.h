@@ -34,6 +34,8 @@ namespace Chopper {
 
 		inline bool IsVSyncEnabled() const { return m_InternalState.VSyncEnabled; }
 
+		inline void* GetNativeWindow() const { return m_Window; }
+
 	private:
 		WindowState m_InternalState;
 		GLFWwindow* m_Window;

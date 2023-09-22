@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Event.h>
+#include <core/InputCodes.h>
 
 #include <sstream>
 
@@ -8,24 +9,24 @@ namespace Chopper {
 
 	class CHOPPER_API MouseButtonEvent : public Event {
 	public:
-		inline int GetMouseButton() const { return m_MouseButton; }
+		inline MouseButtonCode GetMouseButton() const { return m_MouseButton; }
 
 		std::string GetStateLog() const override {
 			std::stringstream ss;
-			ss << m_Name << ": " << m_MouseButton;
+			ss << m_Name << ": " << static_cast<int>(m_MouseButton);
 			return ss.str();
 		}
 
 	protected:
-		MouseButtonEvent(int button, std::string name)
+		MouseButtonEvent(MouseButtonCode button, std::string name)
 			: m_MouseButton(button), Event(name) {}
 
-		int m_MouseButton;
+		MouseButtonCode m_MouseButton;
 	};
 
 	class CHOPPER_API MouseButtonPressedEvent : public MouseButtonEvent {
 	public:
-		MouseButtonPressedEvent(int button)
+		MouseButtonPressedEvent(MouseButtonCode button)
 			: MouseButtonEvent(button, "MouseButtonPressed") {}
 
 		static EventType GetStaticType() { return EventType::MouseButtonPressed; }
@@ -34,7 +35,7 @@ namespace Chopper {
 
 	class CHOPPER_API MouseButtonReleasedEvent : public MouseButtonEvent {
 	public:
-		MouseButtonReleasedEvent(int button)
+		MouseButtonReleasedEvent(MouseButtonCode button)
 			: MouseButtonEvent(button, "MouseButtonReleased") {}
 
 		static EventType GetStaticType() { return EventType::MouseButtonReleased; }

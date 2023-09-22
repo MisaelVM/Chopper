@@ -1,10 +1,18 @@
 #include "Application.h"
 
 #include <core/Logger.h>
+#include <core/Asserts.h>
+
+#include <core/Input.h>
 
 namespace Chopper {
 
+	Application* Application::s_Instance = nullptr;
+
 	Application::Application() {
+		CHOPPER_ASSERT(!s_Instance, "Application already exists!");
+		s_Instance = this;
+
 		Window::WindowState state{};
 		m_Window = std::make_unique<Window>(state);
 		m_Window->SetEventCallback([&](Event& e) { OnEvent(e); });

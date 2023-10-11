@@ -5,6 +5,8 @@
 
 #include <core/Input.h>
 
+#include <renderer/Renderer.h>
+
 namespace Chopper {
 
 	Application* Application::s_Instance = nullptr;
@@ -16,9 +18,14 @@ namespace Chopper {
 		Window::WindowState state{};
 		m_Window = std::make_unique<Window>(state);
 		m_Window->SetEventCallback([&](Event& e) { OnEvent(e); });
+
+		bool result = Renderer::Init(RENDERER_VULKAN_BACKEND);
+		CHOPPER_ASSERT(result, "Renderer could not be initialized!");
 	}
 
-	Application::~Application() {}
+	Application::~Application() {
+		Renderer::Shutdown(); // TODO: Check this WILL work
+	}
 
 	void Application::Run() {
 		while (m_Running) {

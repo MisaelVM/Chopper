@@ -5,5 +5,13 @@
   "dependencies": [
     "spdlog",
     "glfw3"
-  ]
+  ],
+  "features": {
+    "vulkan-backend": {
+      "description": "Vulkan Renderer Backend",
+      "dependencies": [
+        "vulkan"
+      ]
+    }
+  }
 }

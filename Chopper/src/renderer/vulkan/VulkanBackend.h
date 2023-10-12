@@ -14,6 +14,7 @@ namespace Chopper {
 
 	private:
 		bool Init();
+		void Shutdown();
 	};
 
 }

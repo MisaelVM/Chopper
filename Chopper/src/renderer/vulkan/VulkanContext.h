@@ -6,14 +6,21 @@
 #include <core/Logger.h>
 #include <core/Asserts.h>
 
+#include "VulkanDevice.h"
+
 namespace Chopper {
 
 	struct VulkanContext {
 		VkInstance Instance = VK_NULL_HANDLE;
 		VkAllocationCallbacks* Allocator = nullptr;
+		VkSurfaceKHR Surface = VK_NULL_HANDLE;
 #ifdef DEBUG_BUILD
 		VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;
 #endif
+		VulkanDevice Device{ *this };
+
+		bool CreateDevice() { return Device.CreateDevice(); }
+		void DestroyDevice() { Device.DestroyDevice(); }
 	};
 
 }

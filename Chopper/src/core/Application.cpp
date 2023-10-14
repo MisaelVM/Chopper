@@ -16,6 +16,7 @@ namespace Chopper {
 		s_Instance = this;
 
 		Window::WindowState state{};
+		state.VulkanAsBackend = true;
 		m_Window = std::make_unique<Window>(state);
 		m_Window->SetEventCallback([&](Event& e) { OnEvent(e); });
 

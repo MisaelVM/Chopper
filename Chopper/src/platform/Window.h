@@ -16,7 +16,8 @@ namespace Chopper {
 			std::string Title = "Chopper Window";
 			uint32_t Width = 1280u;
 			uint32_t Height = 720u;
-			bool VSyncEnabled = true;
+			bool VSyncEnabled = false;
+			bool VulkanAsBackend = false;
 
 			EventCallbackFn EventCallback;
 		};

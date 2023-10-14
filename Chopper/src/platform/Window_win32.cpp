@@ -27,14 +27,19 @@ namespace Chopper {
 				CHOPPER_LOG_ERROR("GLFW encountered error {0}: {1}.", error_code, description);
 			});
 
+			if (m_InternalState.VulkanAsBackend)
+				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 			s_GLFWInitialized = true;
 			CHOPPER_LOG_INFO("GLFW successfully initialized.");
 		}
 
 		m_Window = glfwCreateWindow((int)m_InternalState.Width, (int)m_InternalState.Height, m_InternalState.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
+		if (!m_InternalState.VulkanAsBackend) {
+			glfwMakeContextCurrent(m_Window);
+			SetVsync(m_InternalState.VSyncEnabled);
+		}
 		glfwSetWindowUserPointer(m_Window, &m_InternalState);
-		SetVsync();
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window) {
 			auto state = reinterpret_cast<WindowState*>(glfwGetWindowUserPointer(window));
@@ -118,7 +123,8 @@ namespace Chopper {
 
 	void Window::OnUpdate() {
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		if (!m_InternalState.VulkanAsBackend)
+			glfwSwapBuffers(m_Window);
 	}
 
 	void Window::SetVsync(bool enabled) {

@@ -8,6 +8,7 @@
 #include <common/includes.h>
 
 #include <core/Logger.h>
+#include <core/Application.h> // TODO: Don't think this is a good thing to do
 
 namespace Chopper {
 
@@ -128,18 +129,31 @@ namespace Chopper {
 		CHOPPER_LOG_DEBUG("Vulkan debug messenger successfully created.");
 #endif
 
+		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		VK_MSG_CHECK(glfwCreateWindowSurface(s_Context.Instance, window, s_Context.Allocator, &s_Context.Surface), "Failed to create window surface!");
+		CHOPPER_LOG_DEBUG("Vulkan window surface successfully created.");
+
+		s_Context.CreateDevice();
+
 		CHOPPER_LOG_INFO("Vulkan Backend successfully initialized.");
 		return true;
 	}
 
 	void VulkanBackend::Shutdown() {
+		s_Context.DestroyDevice();
+
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Window Surface...");
+		vkDestroySurfaceKHR(s_Context.Instance, s_Context.Surface, s_Context.Allocator);
+		s_Context.Surface = VK_NULL_HANDLE;
 #ifdef DEBUG_BUILD
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Debug Messenger...");
 		PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_Context.Instance, "vkDestroyDebugUtilsMessengerEXT");
 		func(s_Context.Instance, s_Context.DebugMessenger, s_Context.Allocator);
+		s_Context.DebugMessenger = VK_NULL_HANDLE;
 #endif
-		CHOPPER_LOG_DEBUG("Destroying Vulkan Instance");
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Instance...");
 		vkDestroyInstance(s_Context.Instance, s_Context.Allocator);
+		s_Context.Instance = VK_NULL_HANDLE;
 	}
 
 	bool VulkanBackend::BeginFrame(float deltaTime) {

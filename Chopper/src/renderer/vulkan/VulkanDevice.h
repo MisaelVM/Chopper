@@ -36,6 +36,11 @@ namespace Chopper {
 		VkPhysicalDevice& Physical() { return m_PhysicalDevice; }
 		VkDevice& Logical() { return m_LogicalDevice; }
 
+		const PhysicalDeviceQueueFamilyDetails& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
+		const SwapchainSupportDetails& GetSwapchainSupportDetails() const { return m_SwapchainSupport; }
+		SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, bool update = false);
+		bool FindDepthFormat();
+
 	private:
 		bool CreateDevice();
 		void DestroyDevice();
@@ -49,16 +54,17 @@ namespace Chopper {
 			PhysicalDeviceQueueFamilyDetails& queueFamilyIndices,
 			SwapchainSupportDetails& swapchainSupport
 		);
-		SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface);
 
-		SwapchainSupportDetails m_SwapchainSupport{};
 		PhysicalDeviceQueueFamilyDetails m_QueueFamilyIndices{};
+		SwapchainSupportDetails m_SwapchainSupport{};
 
 		struct PhysicalDeviceDetails {
 			VkPhysicalDeviceProperties Properties;
 			VkPhysicalDeviceFeatures Features;
 			VkPhysicalDeviceMemoryProperties MemoryProperties;
 		} m_PhysicalDeviceDetails{};
+
+		VkFormat m_DepthFormat = VK_FORMAT_UNDEFINED;
 
 		VkPhysicalDevice m_PhysicalDevice = VK_NULL_HANDLE;
 		VkDevice m_LogicalDevice = VK_NULL_HANDLE;

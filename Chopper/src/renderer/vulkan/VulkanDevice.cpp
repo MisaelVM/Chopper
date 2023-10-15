@@ -187,6 +187,55 @@ namespace Chopper {
 		return true;
 	}
 
+	SwapchainSupportDetails VulkanDevice::QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, bool update) {
+		SwapchainSupportDetails details{};
+
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.Capabilities);
+
+		uint32_t formatCount = 0;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
+		if (formatCount) {
+			details.Formats.resize(formatCount);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.Formats.data());
+		}
+
+		uint32_t presentModeCount = 0;
+		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
+		if (presentModeCount) {
+			details.PresentModes.resize(presentModeCount);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.PresentModes.data());
+		}
+
+		if (update)
+			m_SwapchainSupport = details;
+
+		return details;
+	}
+
+	bool VulkanDevice::FindDepthFormat() {
+		std::vector<VkFormat> candidates = {
+			VK_FORMAT_D32_SFLOAT,
+			VK_FORMAT_D32_SFLOAT_S8_UINT,
+			VK_FORMAT_D24_UNORM_S8_UINT
+		};
+		VkFormatFeatureFlags features = VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		for (VkFormat candidate : candidates) {
+			VkFormatProperties properties;
+			vkGetPhysicalDeviceFormatProperties(m_PhysicalDevice, candidate, &properties);
+
+			if ((properties.linearTilingFeatures & features) == features) {
+				m_DepthFormat = candidate;
+				return true;
+			}
+			else if ((properties.optimalTilingFeatures & features) == features) {
+				m_DepthFormat = candidate;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool VulkanDevice::IsPhysicalDeviceSuitable(
 		VkPhysicalDevice device, VkSurfaceKHR surface,
 		const VkPhysicalDeviceProperties& properties,
@@ -285,28 +334,6 @@ namespace Chopper {
 		}
 
 		return true;
-	}
-
-	SwapchainSupportDetails VulkanDevice::QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface) {
-		SwapchainSupportDetails details{};
-		
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &details.Capabilities);
-
-		uint32_t formatCount = 0;
-		vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, nullptr);
-		if (formatCount) {
-			details.Formats.resize(formatCount);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, details.Formats.data());
-		}
-
-		uint32_t presentModeCount = 0;
-		vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, nullptr);
-		if (presentModeCount) {
-			details.PresentModes.resize(presentModeCount);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &presentModeCount, details.PresentModes.data());
-		}
-
-		return details;
 	}
 
 }

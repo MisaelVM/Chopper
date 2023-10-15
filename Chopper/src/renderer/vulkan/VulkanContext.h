@@ -7,6 +7,7 @@
 #include <core/Asserts.h>
 
 #include "VulkanDevice.h"
+#include "VulkanSwapchain.h"
 
 namespace Chopper {
 
@@ -21,6 +22,11 @@ namespace Chopper {
 
 		bool CreateDevice() { return Device.CreateDevice(); }
 		void DestroyDevice() { Device.DestroyDevice(); }
+
+		VulkanSwapchain Swapchain{ *this };
+		uint32_t ImageIndex = 0;
+		uint32_t CurrentFrame = 0;
+		bool RecreatingSwapchain = false;
 	};
 
 }

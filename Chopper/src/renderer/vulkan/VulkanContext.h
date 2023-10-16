@@ -11,22 +11,35 @@
 
 namespace Chopper {
 
-	struct VulkanContext {
-		VkInstance Instance = VK_NULL_HANDLE;
-		VkAllocationCallbacks* Allocator = nullptr;
-		VkSurfaceKHR Surface = VK_NULL_HANDLE;
+	class VulkanContext {
+	public:
+		static VkInstance& GetInstance();
+		static VkAllocationCallbacks*& GetAllocator();
+		static VkSurfaceKHR& GetSurface();
 #ifdef DEBUG_BUILD
-		VkDebugUtilsMessengerEXT DebugMessenger = VK_NULL_HANDLE;
+		static VkDebugUtilsMessengerEXT& GetDebugMessenger();
 #endif
-		VulkanDevice Device{ *this };
+		static VulkanDevice& GetDevice();
 
-		bool CreateDevice() { return Device.CreateDevice(); }
-		void DestroyDevice() { Device.DestroyDevice(); }
+		static bool CreateDevice();
+		static void ReleaseDevice();
 
-		VulkanSwapchain Swapchain{ *this };
-		uint32_t ImageIndex = 0;
-		uint32_t CurrentFrame = 0;
-		bool RecreatingSwapchain = false;
+		static void SetFrame(uint32_t frame);
+
+	private:
+		static VkInstance s_Instance;
+		static VkAllocationCallbacks* s_Allocator;
+		static VkSurfaceKHR s_Surface;
+
+#ifdef DEBUG_BUILD
+		static VkDebugUtilsMessengerEXT s_DebugMessenger;
+#endif
+		static VulkanDevice s_Device;
+
+		static VulkanSwapchain s_Swapchain;
+		static uint32_t s_ImageIndex;
+		static uint32_t s_CurrentFrame;
+		static bool s_RecreatingSwapchain;
 	};
 
 }

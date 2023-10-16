@@ -10,9 +10,7 @@
 
 namespace Chopper {
 
-	VulkanSwapchain::VulkanSwapchain(VulkanContext& context, uint32_t width, uint32_t height)
-		: m_Context(context)
-	{
+	VulkanSwapchain::VulkanSwapchain(uint32_t width, uint32_t height) {
 		
 	}
 
@@ -21,7 +19,8 @@ namespace Chopper {
 	}
 
 	bool VulkanSwapchain::CreateSwapchain(uint32_t width, uint32_t height) {
-		auto swapchainSupport = m_Context.Device.QuerySwapchainSupport(m_Context.Device.Physical(), m_Context.Surface, true);
+		VulkanDevice device = VulkanContext::GetDevice();
+		auto swapchainSupport = device.QuerySwapchainSupport(device.Physical(), VulkanContext::GetSurface(), true);
 
 		VkExtent2D extent = { width, height };
 		m_MaxFramesInFlight = 2;
@@ -59,7 +58,7 @@ namespace Chopper {
 
 		VkSwapchainCreateInfoKHR swapchainCreateInfo{};
 		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		swapchainCreateInfo.surface = m_Context.Surface;
+		swapchainCreateInfo.surface = VulkanContext::GetSurface();
 		swapchainCreateInfo.minImageCount = imageCount;
 		swapchainCreateInfo.imageFormat = m_SurfaceFormat.format;
 		swapchainCreateInfo.imageColorSpace = m_SurfaceFormat.colorSpace;
@@ -67,7 +66,7 @@ namespace Chopper {
 		swapchainCreateInfo.imageArrayLayers = 1;
 		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-		PhysicalDeviceQueueFamilyDetails indices = m_Context.Device.GetQueueFamilyIndices();
+		PhysicalDeviceQueueFamilyDetails indices = device.GetQueueFamilyIndices();
 		uint32_t queueFamilyIndices[] = { indices.GraphicsFamilyIndex, indices.PresentFamilyIndex };
 		if (indices.GraphicsFamilyIndex != indices.PresentFamilyIndex) {
 			swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -87,16 +86,16 @@ namespace Chopper {
 		swapchainCreateInfo.oldSwapchain = nullptr;
 
 		VK_MSG_CHECK(
-			vkCreateSwapchainKHR(m_Context.Device.Logical(), &swapchainCreateInfo, m_Context.Allocator, &m_Swapchain),
+			vkCreateSwapchainKHR(device.Logical(), &swapchainCreateInfo, VulkanContext::GetAllocator(), &m_Swapchain),
 			"Failed to create swapchain!"
 		);
 
-		m_Context.CurrentFrame = 0;
+		VulkanContext::SetFrame(0);
 
 		imageCount = 0;
-		vkGetSwapchainImagesKHR(m_Context.Device.Logical(), m_Swapchain, &imageCount, nullptr);
+		vkGetSwapchainImagesKHR(device.Logical(), m_Swapchain, &imageCount, nullptr);
 		m_SwapchainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(m_Context.Device.Logical(), m_Swapchain, &imageCount, m_SwapchainImages.data());
+		vkGetSwapchainImagesKHR(device.Logical(), m_Swapchain, &imageCount, m_SwapchainImages.data());
 
 		m_SwapchainImageViews.resize(imageCount);
 		for (uint32_t i = 0; i < imageCount; ++i) {
@@ -116,12 +115,15 @@ namespace Chopper {
 			imageViewInfo.subresourceRange.layerCount = 1;
 
 			VK_MSG_CHECK(
-				vkCreateImageView(m_Context.Device.Logical(), &imageViewInfo, m_Context.Allocator, &m_SwapchainImageViews[i]),
+				vkCreateImageView(device.Logical(), &imageViewInfo, VulkanContext::GetAllocator(), &m_SwapchainImageViews[i]),
 				"Failed to create Image View!"
 			);
-
-
 		}
+
+		if (!device.FindDepthFormat())
+			CHOPPER_LOG_CRIT("Failed to find a supported depth format!");
+
+
 	}
 
 	void VulkanSwapchain::DestroySwapchain() {
@@ -133,7 +135,7 @@ namespace Chopper {
 	}
 
 	bool VulkanSwapchain::AcquireNextImageIndex(uint64_t timeout, VkSemaphore imageAvailableSem, VkFence fence, uint32_t* pImageIndex) {
-		VkResult result = vkAcquireNextImageKHR(m_Context.Device.Logical(), m_Swapchain, timeout, imageAvailableSem, fence, pImageIndex);
+		VkResult result = vkAcquireNextImageKHR(VulkanContext::GetDevice().Logical(), m_Swapchain, timeout, imageAvailableSem, fence, pImageIndex);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			RecreateSwapchain();
 			return false;

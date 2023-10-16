@@ -27,10 +27,10 @@ namespace Chopper {
 		std::vector<const char*> DeviceExtensions;
 	};
 
-	struct VulkanDevice {
+	class VulkanDevice {
 		friend class VulkanContext;
 	public:
-		VulkanDevice(VulkanContext& context);
+		VulkanDevice();
 		~VulkanDevice();
 
 		VkPhysicalDevice& Physical() { return m_PhysicalDevice; }
@@ -72,10 +72,6 @@ namespace Chopper {
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 		VkQueue m_TransferQueue = VK_NULL_HANDLE;
-
-		VkInstance& m_ContextInstance;
-		VkSurfaceKHR& m_ContextSurface;
-		VkAllocationCallbacks*& m_ContextAllocators;
 	};
 
 }

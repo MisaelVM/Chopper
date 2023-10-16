@@ -19,16 +19,14 @@ namespace Chopper {
 		}                                                                                  \
 	}
 
-	VulkanDevice::VulkanDevice(VulkanContext& context)
-		: m_ContextInstance(context.Instance), m_ContextSurface(context.Surface), m_ContextAllocators(context.Allocator)
-	{
-		if (m_ContextInstance != VK_NULL_HANDLE && m_ContextSurface != VK_NULL_HANDLE) {
+	VulkanDevice::VulkanDevice() {
+		if (VulkanContext::GetInstance() != VK_NULL_HANDLE && VulkanContext::GetSurface() != VK_NULL_HANDLE) {
 			CreateDevice();
 		}
 	}
 
 	VulkanDevice::~VulkanDevice() {
-		if (m_ContextInstance != VK_NULL_HANDLE && m_LogicalDevice != VK_NULL_HANDLE)
+		if (VulkanContext::GetInstance() != VK_NULL_HANDLE && m_LogicalDevice != VK_NULL_HANDLE)
 			DestroyDevice();
 	}
 
@@ -82,7 +80,7 @@ namespace Chopper {
 		deviceCreateInfo.enabledLayerCount = 0;
 		deviceCreateInfo.ppEnabledLayerNames = nullptr;
 		
-		VK_MSG_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, m_ContextAllocators, &m_LogicalDevice), "Failed to create Vulkan Logical Device!");
+		VK_MSG_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, VulkanContext::GetAllocator(), &m_LogicalDevice), "Failed to create Vulkan Logical Device!");
 		CHOPPER_LOG_DEBUG("Vulkan Logical Device successfully created.");
 
 		vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.GraphicsFamilyIndex, 0, &m_GraphicsQueue);
@@ -98,7 +96,7 @@ namespace Chopper {
 		m_GraphicsQueue = VK_NULL_HANDLE;
 
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Logical Device...");
-		vkDestroyDevice(m_LogicalDevice, m_ContextAllocators);
+		vkDestroyDevice(m_LogicalDevice, VulkanContext::GetAllocator());
 		m_LogicalDevice = VK_NULL_HANDLE;
 
 		m_PhysicalDevice = VK_NULL_HANDLE;
@@ -106,7 +104,7 @@ namespace Chopper {
 
 	bool VulkanDevice::PickPhysicalDevice() {
 		uint32_t physicalDeviceCount = 0;
-		vkEnumeratePhysicalDevices(m_ContextInstance, &physicalDeviceCount, nullptr);
+		vkEnumeratePhysicalDevices(VulkanContext::GetInstance(), &physicalDeviceCount, nullptr);
 
 		if (!physicalDeviceCount) {
 			CHOPPER_LOG_CRIT("No devices with Vulkan support found!");
@@ -114,7 +112,7 @@ namespace Chopper {
 		}
 
 		std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-		vkEnumeratePhysicalDevices(m_ContextInstance, &physicalDeviceCount, physicalDevices.data());
+		vkEnumeratePhysicalDevices(VulkanContext::GetInstance(), &physicalDeviceCount, physicalDevices.data());
 
 		for (const auto& physicalDevice : physicalDevices) {
 			VkPhysicalDeviceProperties properties{};
@@ -141,7 +139,7 @@ namespace Chopper {
 			PhysicalDeviceQueueFamilyDetails queueFamilyIndices{};
 
 			bool result = IsPhysicalDeviceSuitable(
-				physicalDevice, m_ContextSurface,
+				physicalDevice, VulkanContext::GetSurface(),
 				properties, features, requirements,
 				queueFamilyIndices, m_SwapchainSupport
 			);
@@ -233,6 +231,7 @@ namespace Chopper {
 			}
 		}
 
+		m_DepthFormat = VK_FORMAT_UNDEFINED;
 		return false;
 	}
 
@@ -285,7 +284,7 @@ namespace Chopper {
 			}
 
 			VkBool32 presentSupport = VK_FALSE;
-			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_ContextSurface, &presentSupport);
+			vkGetPhysicalDeviceSurfaceSupportKHR(device, i, VulkanContext::GetSurface(), &presentSupport);
 			if (presentSupport)
 				queueFamilyIndices.PresentFamilyIndex = i;
 
@@ -300,7 +299,7 @@ namespace Chopper {
 		CHECK_QUEUE_SUPPORT(requirements.TransferSupport, queueFamilyIndices.TransferFamilyIndex, "Transfer Queue");
 
 		// Device must support presentation / swapchain
-		swapchainSupport = QuerySwapchainSupport(device, m_ContextSurface);
+		swapchainSupport = QuerySwapchainSupport(device, VulkanContext::GetSurface());
 		if (swapchainSupport.Formats.empty() || swapchainSupport.PresentModes.empty()) {
 			CHOPPER_LOG_INFO("Candidate device does not satisfy swapchain support.");
 			return false;

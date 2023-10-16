@@ -4,10 +4,10 @@
 
 namespace Chopper {
 
-	struct VulkanSwapchain {
+	class VulkanSwapchain {
 		friend class VulkanContext;
 	public:
-		VulkanSwapchain(VulkanContext& context, uint32_t width = 0, uint32_t height = 0);
+		VulkanSwapchain(uint32_t width = 0, uint32_t height = 0);
 		~VulkanSwapchain();
 
 		bool AcquireNextImageIndex(uint64_t timeout, VkSemaphore imageAvailableSem, VkFence fence, uint32_t* pImageIndex);
@@ -25,8 +25,6 @@ namespace Chopper {
 
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
-
-		VulkanContext& m_Context;
 	};
 
 }

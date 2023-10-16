@@ -12,7 +12,7 @@
 
 namespace Chopper {
 
-	static VulkanContext s_Context{};
+	// static VulkanContext s_Context{};
 
 	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
@@ -30,7 +30,12 @@ namespace Chopper {
 		Shutdown();
 	}
 
+	// TODO: Maybe all of this logic must be inside VulkanContext and just be invoked form here
 	bool VulkanBackend::Init() {
+		VkInstance& instance = VulkanContext::GetInstance();
+		VkAllocationCallbacks*& allocator = VulkanContext::GetAllocator();
+		VkSurfaceKHR& surface = VulkanContext::GetSurface();
+
 		VkApplicationInfo appInfo{};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pApplicationName = "Chopper Engine Testbed"; // TODO: Make this configurable
@@ -105,7 +110,10 @@ namespace Chopper {
 		instanceInfo.ppEnabledLayerNames = nullptr;
 #endif
 
-		VK_MSG_CHECK(vkCreateInstance(&instanceInfo, s_Context.Allocator, &s_Context.Instance), "Failed to create instance!");
+		VK_MSG_CHECK(
+			vkCreateInstance(&instanceInfo, allocator, &instance),
+			"Failed to create instance!"
+		);
 		CHOPPER_LOG_DEBUG("Vulkan instance successfully created.");
 
 #ifdef DEBUG_BUILD
@@ -122,38 +130,51 @@ namespace Chopper {
 		messengerInfo.pfnUserCallback = DebugCallback;
 		messengerInfo.pUserData = nullptr;
 
-		PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_Context.Instance, "vkCreateDebugUtilsMessengerEXT");
+		PFN_vkCreateDebugUtilsMessengerEXT func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
 		CHOPPER_ASSERT(func, "Failed to acquire vkCreateDebugUtilsMessengerEXT function!");
 
-		VK_MSG_CHECK(func(s_Context.Instance, &messengerInfo, s_Context.Allocator, &s_Context.DebugMessenger), "Failed to create debug messenger!");
+		VK_MSG_CHECK(
+			func(instance, &messengerInfo, allocator, &VulkanContext::GetDebugMessenger()),
+			"Failed to create debug messenger!"
+		);
 		CHOPPER_LOG_DEBUG("Vulkan debug messenger successfully created.");
 #endif
 
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
-		VK_MSG_CHECK(glfwCreateWindowSurface(s_Context.Instance, window, s_Context.Allocator, &s_Context.Surface), "Failed to create window surface!");
+		VK_MSG_CHECK(
+			glfwCreateWindowSurface(instance, window, allocator, &surface),
+			"Failed to create window surface!"
+		);
 		CHOPPER_LOG_DEBUG("Vulkan window surface successfully created.");
 
-		s_Context.CreateDevice();
+		// s_Context.CreateDevice();
+		VulkanContext::CreateDevice();
 
 		CHOPPER_LOG_INFO("Vulkan Backend successfully initialized.");
 		return true;
 	}
 
 	void VulkanBackend::Shutdown() {
-		s_Context.DestroyDevice();
+		VkInstance& instance = VulkanContext::GetInstance();
+		VkAllocationCallbacks*& allocator = VulkanContext::GetAllocator();
+		VkSurfaceKHR& surface = VulkanContext::GetSurface();
+		
+		// s_Context.DestroyDevice();
+		VulkanContext::ReleaseDevice();
 
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Window Surface...");
-		vkDestroySurfaceKHR(s_Context.Instance, s_Context.Surface, s_Context.Allocator);
-		s_Context.Surface = VK_NULL_HANDLE;
+		vkDestroySurfaceKHR(instance, surface, allocator);
+		surface = VK_NULL_HANDLE;
 #ifdef DEBUG_BUILD
+		VkDebugUtilsMessengerEXT messenger = VulkanContext::GetDebugMessenger();
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Debug Messenger...");
-		PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_Context.Instance, "vkDestroyDebugUtilsMessengerEXT");
-		func(s_Context.Instance, s_Context.DebugMessenger, s_Context.Allocator);
-		s_Context.DebugMessenger = VK_NULL_HANDLE;
+		PFN_vkDestroyDebugUtilsMessengerEXT func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		func(instance, messenger, allocator);
+		messenger = VK_NULL_HANDLE;
 #endif
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Instance...");
-		vkDestroyInstance(s_Context.Instance, s_Context.Allocator);
-		s_Context.Instance = VK_NULL_HANDLE;
+		vkDestroyInstance(instance, allocator);
+		instance = VK_NULL_HANDLE;
 	}
 
 	bool VulkanBackend::BeginFrame(float deltaTime) {

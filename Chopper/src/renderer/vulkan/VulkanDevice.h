@@ -38,8 +38,8 @@ namespace Chopper {
 
 		const PhysicalDeviceQueueFamilyDetails& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 		const SwapchainSupportDetails& GetSwapchainSupportDetails() const { return m_SwapchainSupport; }
+		const VkFormat GetDepthFormat();
 		SwapchainSupportDetails QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, bool update = false);
-		bool FindDepthFormat();
 
 	private:
 		bool CreateDevice();
@@ -54,6 +54,7 @@ namespace Chopper {
 			PhysicalDeviceQueueFamilyDetails& queueFamilyIndices,
 			SwapchainSupportDetails& swapchainSupport
 		);
+		bool FindDepthFormat();
 
 		PhysicalDeviceQueueFamilyDetails m_QueueFamilyIndices{};
 		SwapchainSupportDetails m_SwapchainSupport{};

@@ -19,12 +19,22 @@ namespace Chopper {
 #ifdef DEBUG_BUILD
 		static VkDebugUtilsMessengerEXT& GetDebugMessenger();
 #endif
-		static VulkanDevice& GetDevice();
+		static VulkanDevice* GetDevice();
 
 		static bool CreateDevice();
 		static void ReleaseDevice();
 
+		static bool CreateSwapchain(uint32_t width, uint32_t height);
+		static void DestroySwapchain();
+		static bool RecreateSwapchain(uint32_t width, uint32_t height);
+
+		static uint32_t FindMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
 		static void SetFrame(uint32_t frame);
+		static void SetFramebufferSize(uint32_t width, uint32_t height);
+
+		static uint32_t GetFramebufferWidth();
+		static uint32_t GetFramebufferHeight();
 
 	private:
 		static VkInstance s_Instance;
@@ -40,6 +50,9 @@ namespace Chopper {
 		static uint32_t s_ImageIndex;
 		static uint32_t s_CurrentFrame;
 		static bool s_RecreatingSwapchain;
+
+		static uint32_t s_FramebufferWidth;
+		static uint32_t s_FramebufferHeight;
 	};
 
 }

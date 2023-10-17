@@ -2,8 +2,6 @@
 
 #include <renderer/RendererBackend.h>
 
-//#include "VulkanContext.h"
-
 namespace Chopper {
 
 	class VulkanBackend : public RendererBackend {
@@ -17,8 +15,6 @@ namespace Chopper {
 	private:
 		bool Init();
 		void Shutdown();
-
-		//VulkanContext m_VulkanContext;
 	};
 
 }

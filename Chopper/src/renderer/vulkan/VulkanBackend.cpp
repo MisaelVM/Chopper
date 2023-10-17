@@ -147,8 +147,12 @@ namespace Chopper {
 		);
 		CHOPPER_LOG_DEBUG("Vulkan window surface successfully created.");
 
-		// s_Context.CreateDevice();
 		VulkanContext::CreateDevice();
+
+		int w, h;
+		glfwGetFramebufferSize(window, &w, &h);
+		VulkanContext::SetFramebufferSize(w, h);
+		VulkanContext::CreateSwapchain(w, h);
 
 		CHOPPER_LOG_INFO("Vulkan Backend successfully initialized.");
 		return true;
@@ -159,7 +163,7 @@ namespace Chopper {
 		VkAllocationCallbacks*& allocator = VulkanContext::GetAllocator();
 		VkSurfaceKHR& surface = VulkanContext::GetSurface();
 		
-		// s_Context.DestroyDevice();
+		VulkanContext::DestroySwapchain();
 		VulkanContext::ReleaseDevice();
 
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Window Surface...");

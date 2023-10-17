@@ -185,6 +185,15 @@ namespace Chopper {
 		return true;
 	}
 
+	const VkFormat VulkanDevice::GetDepthFormat() {
+		if (m_DepthFormat == VK_FORMAT_UNDEFINED && !FindDepthFormat()) {
+			CHOPPER_LOG_CRIT("Failed to find a supported depth format!");
+			return VK_FORMAT_UNDEFINED;
+		}
+
+		return m_DepthFormat;
+	}
+
 	SwapchainSupportDetails VulkanDevice::QuerySwapchainSupport(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, bool update) {
 		SwapchainSupportDetails details{};
 

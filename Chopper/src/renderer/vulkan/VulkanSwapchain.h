@@ -3,6 +3,7 @@
 #include <vulkan/vulkan.hpp>
 
 #include "VulkanDepthImage.h"
+#include "VulkanFramebuffer.h"
 
 namespace Chopper {
 
@@ -16,6 +17,11 @@ namespace Chopper {
 		bool AcquireNextImageIndex(uint64_t timeout, VkSemaphore imageAvailableSem, VkFence fence, uint32_t* pImageIndex);
 		void Present(VkQueue graphicsQueue, VkQueue presentQueue, VkSemaphore renderCompleteSem, uint32_t imageIndex);
 
+		const VkSurfaceFormatKHR GetSurfaceFormat() const { return m_SurfaceFormat; }
+		const std::vector<VkImageView>& GetViews() const { return m_SwapchainImageViews; }
+
+		void RegenerateFramebuffers();
+
 	private:
 		bool CreateSwapchain(uint32_t width, uint32_t height);
 		void DestroySwapchain();
@@ -28,6 +34,7 @@ namespace Chopper {
 
 		std::vector<VkImage> m_SwapchainImages;
 		std::vector<VkImageView> m_SwapchainImageViews;
+		std::vector<VulkanFramebuffer> m_Framebuffers;
 
 		VulkanDepthImage m_DepthAttachment;
 	};

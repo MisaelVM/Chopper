@@ -91,10 +91,11 @@ namespace Chopper {
 
 		VK_MSG_CHECK(
 			vkCreateSwapchainKHR(device->Logical(), &swapchainCreateInfo, VulkanContext::GetAllocator(), &m_Swapchain),
-			"Failed to create swapchain!"
+			"Failed to create Vulkan Swapchain!"
 		);
 
-		VulkanContext::SetFrame(0);
+		//VulkanContext::SetFrameIndex(0);
+		VulkanContext::ResetFrameIndex();
 
 		imageCount = 0;
 		vkGetSwapchainImagesKHR(device->Logical(), m_Swapchain, &imageCount, nullptr);
@@ -135,8 +136,14 @@ namespace Chopper {
 
 		m_DepthAttachment.ClearAttachment();
 
+		for (auto& framebuffer : m_Framebuffers)
+			framebuffer.Destroy();
+
 		for (auto imageView : m_SwapchainImageViews)
 			vkDestroyImageView(device, imageView, allocator);
+
+		if (m_Swapchain == VK_NULL_HANDLE)
+			return;
 
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Swapchain...");
 		vkDestroySwapchainKHR(device, m_Swapchain, allocator);
@@ -177,5 +184,20 @@ namespace Chopper {
 			RecreateSwapchain(VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight());
 		else if (result != VK_SUCCESS)
 			CHOPPER_LOG_CRIT("Failed to present swapchain image!");
+
+		VulkanContext::NextFrame();
+	}
+
+	void VulkanSwapchain::RegenerateFramebuffers() {
+		size_t imageCount = m_SwapchainImageViews.size();
+		m_Framebuffers.resize(imageCount);
+
+		for (size_t i = 0; i < imageCount; ++i) {
+			m_Framebuffers[i].Create(
+				VulkanContext::GetFramebufferWidth(),
+				VulkanContext::GetFramebufferHeight(),
+				{ m_SwapchainImageViews[i], m_DepthAttachment.GetView() }
+			);
+		}
 	}
 }

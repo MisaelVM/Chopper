@@ -36,6 +36,12 @@ namespace Chopper {
 		VkPhysicalDevice& Physical() { return m_PhysicalDevice; }
 		VkDevice& Logical() { return m_LogicalDevice; }
 
+		VkCommandPool& GetCommandPool() { return m_CommandPool; }
+
+		VkQueue GetGraphicsQueue() { return m_GraphicsQueue; }
+		VkQueue GetPresentQueue() { return m_PresentQueue; }
+		VkQueue GetTransferQueue() { return m_TransferQueue; }
+
 		const PhysicalDeviceQueueFamilyDetails& GetQueueFamilyIndices() const { return m_QueueFamilyIndices; }
 		const SwapchainSupportDetails& GetSwapchainSupportDetails() const { return m_SwapchainSupport; }
 		const VkFormat GetDepthFormat();
@@ -73,6 +79,8 @@ namespace Chopper {
 		VkQueue m_GraphicsQueue = VK_NULL_HANDLE;
 		VkQueue m_PresentQueue = VK_NULL_HANDLE;
 		VkQueue m_TransferQueue = VK_NULL_HANDLE;
+
+		VkCommandPool m_CommandPool = VK_NULL_HANDLE;
 	};
 
 }

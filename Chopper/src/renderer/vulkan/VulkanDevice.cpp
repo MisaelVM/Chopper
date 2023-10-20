@@ -81,16 +81,31 @@ namespace Chopper {
 		deviceCreateInfo.ppEnabledLayerNames = nullptr;
 		
 		VK_MSG_CHECK(vkCreateDevice(m_PhysicalDevice, &deviceCreateInfo, VulkanContext::GetAllocator(), &m_LogicalDevice), "Failed to create Vulkan Logical Device!");
-		CHOPPER_LOG_DEBUG("Vulkan Logical Device successfully created.");
+		CHOPPER_LOG_DEBUG("Vulkan Logical Device created successfully.");
 
 		vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.GraphicsFamilyIndex, 0, &m_GraphicsQueue);
 		vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.PresentFamilyIndex, 0, &m_PresentQueue);
 		vkGetDeviceQueue(m_LogicalDevice, m_QueueFamilyIndices.TransferFamilyIndex, 0, &m_TransferQueue);
 
+		VkCommandPoolCreateInfo commandPoolCreateInfo{};
+		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolCreateInfo.queueFamilyIndex = m_QueueFamilyIndices.GraphicsFamilyIndex;
+		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+		VK_MSG_CHECK(
+			vkCreateCommandPool(m_LogicalDevice, &commandPoolCreateInfo, VulkanContext::GetAllocator(), &m_CommandPool),
+			"Failed to create Vulkan Command Pool!"
+		);
+		CHOPPER_LOG_DEBUG("Vulkan Command Pool created successfully.");
+
 		return true;
 	}
 
 	void VulkanDevice::DestroyDevice() {
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Command Pool...");
+		vkDestroyCommandPool(m_LogicalDevice, m_CommandPool, VulkanContext::GetAllocator());
+		m_CommandPool = VK_NULL_HANDLE;
+
 		m_TransferQueue = VK_NULL_HANDLE;
 		m_PresentQueue = VK_NULL_HANDLE;
 		m_GraphicsQueue = VK_NULL_HANDLE;

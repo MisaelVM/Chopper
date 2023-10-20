@@ -27,8 +27,10 @@ namespace Chopper {
 				CHOPPER_LOG_ERROR("GLFW encountered error {0}: {1}.", error_code, description);
 			});
 
-			if (m_InternalState.VulkanAsBackend)
+			if (m_InternalState.VulkanAsBackend) {
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: Make window resizable
+			}
 
 			s_GLFWInitialized = true;
 			CHOPPER_LOG_INFO("GLFW successfully initialized.");

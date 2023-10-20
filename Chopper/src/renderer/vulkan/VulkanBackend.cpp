@@ -112,9 +112,9 @@ namespace Chopper {
 
 		VK_MSG_CHECK(
 			vkCreateInstance(&instanceInfo, allocator, &instance),
-			"Failed to create instance!"
+			"Failed to create Vulkan Instance!"
 		);
-		CHOPPER_LOG_DEBUG("Vulkan instance successfully created.");
+		CHOPPER_LOG_DEBUG("Vulkan Instance created successfully.");
 
 #ifdef DEBUG_BUILD
 		CHOPPER_LOG_INFO("Validation layers are enabled. Creating Vulkan Debugger...");
@@ -135,17 +135,17 @@ namespace Chopper {
 
 		VK_MSG_CHECK(
 			func(instance, &messengerInfo, allocator, &VulkanContext::GetDebugMessenger()),
-			"Failed to create debug messenger!"
+			"Failed to create Vulkan Debug Messenger!"
 		);
-		CHOPPER_LOG_DEBUG("Vulkan debug messenger successfully created.");
+		CHOPPER_LOG_DEBUG("Vulkan Debug Messenger created successfully.");
 #endif
 
 		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
 		VK_MSG_CHECK(
 			glfwCreateWindowSurface(instance, window, allocator, &surface),
-			"Failed to create window surface!"
+			"Failed to create Window Surface!"
 		);
-		CHOPPER_LOG_DEBUG("Vulkan window surface successfully created.");
+		CHOPPER_LOG_DEBUG("Vulkan Window Surface created successfully.");
 
 		VulkanContext::CreateDevice();
 
@@ -154,7 +154,23 @@ namespace Chopper {
 		VulkanContext::SetFramebufferSize(w, h);
 		VulkanContext::CreateSwapchain(w, h);
 
-		CHOPPER_LOG_INFO("Vulkan Backend successfully initialized.");
+		VkRect2D renderArea{};
+		renderArea.offset = { 0, 0 };
+		renderArea.extent = { VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight() };
+		VkClearColorValue clearColor{};
+		clearColor.float32[0] = 0.0f;
+		clearColor.float32[1] = 0.0f;
+		clearColor.float32[2] = 0.2f;
+		clearColor.float32[3] = 1.0f;
+		VulkanContext::CreateRenderPass(renderArea, clearColor, 1.0f, 0);
+
+		VulkanContext::GetSwapchain()->RegenerateFramebuffers();
+
+		VulkanContext::SetupCommandBuffers();
+
+		VulkanContext::CreateSyncObjects();
+
+		CHOPPER_LOG_INFO("Vulkan Backend initialized successfully.");
 		return true;
 	}
 
@@ -163,6 +179,10 @@ namespace Chopper {
 		VkAllocationCallbacks*& allocator = VulkanContext::GetAllocator();
 		VkSurfaceKHR& surface = VulkanContext::GetSurface();
 		
+		vkDeviceWaitIdle(VulkanContext::GetDevice()->Logical());
+
+		VulkanContext::ReleaseSyncObjtects();
+		VulkanContext::ReleaseRenderPass();
 		VulkanContext::DestroySwapchain();
 		VulkanContext::ReleaseDevice();
 
@@ -182,10 +202,106 @@ namespace Chopper {
 	}
 
 	bool VulkanBackend::BeginFrame(float deltaTime) {
+		VkDevice device = VulkanContext::GetDevice()->Logical();
+
+		if (VulkanContext::IsSwapchainRecreating()) {
+			VkResult result = vkDeviceWaitIdle(device);
+			if (result != VK_SUCCESS) {
+				CHOPPER_LOG_ERROR("VulkanBackend::BeginFrame() failed!");
+				return false;
+			}
+			CHOPPER_LOG_INFO("Recreating swapchain.");
+			return false;
+		}
+
+		VkFence fence = VulkanContext::GetCurrentInFlightFence();
+		VkFence waitFences[] = { fence };
+
+		VK_MSG_CHECK(
+			vkWaitForFences(device, 1, waitFences, VK_TRUE, UINT64_MAX),
+			"InFlightFence had a wait failure!"
+		);
+
+		VkSemaphore imageAvailableSemaphore = VulkanContext::GetCurrentImageAvailableSemaphore();
+
+		uint32_t imageIndex = VulkanContext::GetImageIndex();
+		if (!VulkanContext::GetSwapchain()->AcquireNextImageIndex(
+			UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex)
+		) {
+			CHOPPER_LOG_WARN("Failed to acquire next image.");
+			return false;
+		}
+		VulkanContext::SetImageIndex(imageIndex);
+
+		vkResetFences(device, 1, waitFences);
+
+		VkCommandBuffer commandBuffer = VulkanContext::GetCurrentCommandBuffer(true);
+
+		float framebufferWidth = static_cast<float>(VulkanContext::GetFramebufferWidth());
+		float framebufferHeight = static_cast<float>(VulkanContext::GetFramebufferHeight());
+
+		VkViewport viewport{};
+		viewport.x = 0.0f;
+		viewport.y = framebufferHeight;
+		viewport.width = framebufferWidth;
+		viewport.height = -framebufferHeight;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+
+		VkRect2D scissor{};
+		scissor.offset = { 0, 0 };
+		scissor.extent = { static_cast<uint32_t>(framebufferWidth), static_cast<uint32_t>(framebufferHeight) };
+
+		vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+		VkRect2D renderArea{};
+		renderArea.offset = { 0, 0 };
+		renderArea.extent = { VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight() };
+		VulkanContext::GetRenderPass()->SetRenderArea(renderArea);
+		VulkanContext::GetRenderPass()->Begin(VulkanContext::GetCurrentFramebuffer());
+
 		return true;
 	}
 
 	bool VulkanBackend::EndFrame(float deltaTime) {
+		VulkanContext::GetRenderPass()->End();
+
+		VulkanContext::EndCurrentCommandBuffer();
+
+		VkCommandBuffer commandBuffer[] = { VulkanContext::GetCurrentCommandBuffer() };
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = commandBuffer;
+		
+		VkSemaphore signalSemaphores[] = { VulkanContext::GetCurrentRenderFinishedSemaphore() };
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = signalSemaphores;
+
+		VkSemaphore waitSemaphores[] = { VulkanContext::GetCurrentImageAvailableSemaphore() };
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = waitSemaphores;
+
+		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+		submitInfo.pWaitDstStageMask = waitStages;
+
+		VkQueue graphicsQueue = VulkanContext::GetDevice()->GetGraphicsQueue();
+		VkQueue presentQueue = VulkanContext::GetDevice()->GetPresentQueue();
+
+		VkResult result = vkQueueSubmit(graphicsQueue, 1, &submitInfo, VulkanContext::GetCurrentInFlightFence());
+		if (result != VK_SUCCESS) {
+			CHOPPER_LOG_ERROR("Failed to submit queue!");
+			return false;
+		}
+
+		VulkanContext::GetSwapchain()->Present(
+			graphicsQueue, presentQueue,
+			VulkanContext::GetCurrentRenderFinishedSemaphore(),
+			VulkanContext::GetImageIndex()
+		);
+
 		return true;
 	}
 

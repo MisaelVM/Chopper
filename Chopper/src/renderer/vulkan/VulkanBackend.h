@@ -12,6 +12,8 @@ namespace Chopper {
 		bool BeginFrame(float deltaTime) override;
 		bool EndFrame(float deltaTime) override;
 
+		void OnResize(uint32_t width, uint32_t height) override;
+
 	private:
 		bool Init();
 		void Shutdown();

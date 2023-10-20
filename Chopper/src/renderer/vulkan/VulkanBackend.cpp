@@ -210,7 +210,8 @@ namespace Chopper {
 				CHOPPER_LOG_ERROR("VulkanBackend::BeginFrame() failed!");
 				return false;
 			}
-			CHOPPER_LOG_INFO("Recreating swapchain.");
+			CHOPPER_LOG_INFO("Vulkan Swapchain is out of date. Recreating Swapchain.");
+			VulkanContext::RecreateSwapchain(VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight());
 			return false;
 		}
 
@@ -303,6 +304,11 @@ namespace Chopper {
 		);
 
 		return true;
+	}
+
+	void VulkanBackend::OnResize(uint32_t width, uint32_t height) {
+		VulkanContext::SetFramebufferSize(width, height);
+		VulkanContext::SetSwapchainRecreating(true);
 	}
 
 	VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(

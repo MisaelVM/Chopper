@@ -94,7 +94,6 @@ namespace Chopper {
 			"Failed to create Vulkan Swapchain!"
 		);
 
-		//VulkanContext::SetFrameIndex(0);
 		VulkanContext::ResetFrameIndex();
 
 		imageCount = 0;
@@ -124,8 +123,14 @@ namespace Chopper {
 				"Failed to create Image View!"
 			);
 		}
+		CHOPPER_LOG_DEBUG("Vulkan Swapchain Image Views created successfully.");
 
 		m_DepthAttachment.CreateAttachment(extent.width, extent.height, VK_IMAGE_TILING_OPTIMAL, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		CHOPPER_LOG_DEBUG("Vulkan Depth resources created successfully.");
+
+		if (VulkanContext::GetRenderPass()->GetHandle() != VK_NULL_HANDLE)
+			RegenerateFramebuffers();
+
 		CHOPPER_LOG_DEBUG("Vulkan Swapchain created successfully.");
 		return true;
 	}
@@ -134,11 +139,14 @@ namespace Chopper {
 		VkDevice device = VulkanContext::GetDevice()->Logical();
 		VkAllocationCallbacks* allocator = VulkanContext::GetAllocator();
 
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Depth resources...");
 		m_DepthAttachment.ClearAttachment();
 
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Swapchain Framebuffers...");
 		for (auto& framebuffer : m_Framebuffers)
 			framebuffer.Destroy();
 
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Swapchain Image Views...");
 		for (auto imageView : m_SwapchainImageViews)
 			vkDestroyImageView(device, imageView, allocator);
 
@@ -151,6 +159,8 @@ namespace Chopper {
 	}
 
 	bool VulkanSwapchain::RecreateSwapchain(uint32_t width, uint32_t height) {
+		VulkanContext::SetSwapchainRecreating(false);
+		vkDeviceWaitIdle(VulkanContext::GetDevice()->Logical());
 		DestroySwapchain();
 		return CreateSwapchain(width, height);
 	}
@@ -180,7 +190,7 @@ namespace Chopper {
 		presentInfo.pResults = nullptr;
 
 		VkResult result = vkQueuePresentKHR(presentQueue, &presentInfo);
-		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || VulkanContext::IsSwapchainRecreating())
 			RecreateSwapchain(VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight());
 		else if (result != VK_SUCCESS)
 			CHOPPER_LOG_CRIT("Failed to present swapchain image!");
@@ -199,5 +209,6 @@ namespace Chopper {
 				{ m_SwapchainImageViews[i], m_DepthAttachment.GetView() }
 			);
 		}
+		CHOPPER_LOG_DEBUG("Vulkan Swapchain Framebuffers created successfully.");
 	}
 }

@@ -55,6 +55,7 @@ namespace Chopper {
 		static void SetImageIndex(uint32_t imageIndex);
 
 		static bool IsSwapchainRecreating();
+		static void SetSwapchainRecreating(bool recreate);
 
 		static VkFramebuffer GetCurrentFramebuffer();
 		static VkSemaphore GetCurrentImageAvailableSemaphore();

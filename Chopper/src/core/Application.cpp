@@ -31,15 +31,18 @@ namespace Chopper {
 	void Application::Run() {
 		while (m_Running) {
 			m_Window->OnUpdate();
+
+			if (m_Suspended)
+				continue;
+
 			Renderer::DrawFrame();
 		}
 	}
 
 	void Application::OnEvent(Event& e) {
-		CHOPPER_LOG_TRACE("Captured event {0}", e.GetStateLog());
-
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>([&](WindowCloseEvent& e) { return OnWindowClose(e); });
+		dispatcher.Dispatch<WindowResizeEvent>([&](WindowResizeEvent& e) { return OnWindowResize(e); });
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e) {
@@ -47,4 +50,14 @@ namespace Chopper {
 		return true;
 	}
 
+	bool Application::OnWindowResize(WindowResizeEvent& e) {
+		if (e.GetWidth() == 0 || e.GetHeight() == 0) {
+			m_Suspended = true;
+			return true;
+		}
+		m_Suspended = false;
+		Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
+
+		return false;
+	}
 }

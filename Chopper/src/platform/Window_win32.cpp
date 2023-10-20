@@ -29,7 +29,6 @@ namespace Chopper {
 
 			if (m_InternalState.VulkanAsBackend) {
 				glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-				glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE); // TODO: Make window resizable
 			}
 
 			s_GLFWInitialized = true;

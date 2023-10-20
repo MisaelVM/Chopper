@@ -124,6 +124,7 @@ namespace Chopper {
 	void VulkanContext::SetImageIndex(uint32_t imageIndex) { s_ImageIndex = imageIndex; }
 
 	bool VulkanContext::IsSwapchainRecreating() { return s_RecreatingSwapchain; }
+	void VulkanContext::SetSwapchainRecreating(bool recreate) { s_RecreatingSwapchain = recreate; }
 
 	VkFramebuffer VulkanContext::GetCurrentFramebuffer() { return s_Swapchain.m_Framebuffers[s_ImageIndex].GetHandle(); }
 	VkSemaphore VulkanContext::GetCurrentImageAvailableSemaphore() { return s_ImageAvailableSemaphores[s_CurrentFrame]; }

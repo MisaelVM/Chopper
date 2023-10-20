@@ -18,6 +18,8 @@ namespace Chopper {
 		virtual bool BeginFrame(float deltaTime) = 0;
 		virtual bool EndFrame(float deltaTime) = 0;
 
+		virtual void OnResize(uint32_t width, uint32_t height) = 0;
+
 	private:
 	};
 }

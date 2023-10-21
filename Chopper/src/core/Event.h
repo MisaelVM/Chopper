@@ -30,6 +30,8 @@ namespace Chopper {
 		std::string GetName() const { return m_Name; }
 		virtual std::string GetStateLog() const { return GetName(); }
 
+		const bool IsHandled() { return m_Handled; }
+
 	protected:
 		std::string m_Name;
 		bool m_Handled = false;

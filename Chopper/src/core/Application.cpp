@@ -35,6 +35,9 @@ namespace Chopper {
 			if (m_Suspended)
 				continue;
 
+			for (Layer* layer : m_LayerStack)
+				layer->OnUpdate(0);
+
 			Renderer::DrawFrame();
 		}
 	}
@@ -43,6 +46,12 @@ namespace Chopper {
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<WindowCloseEvent>([&](WindowCloseEvent& e) { return OnWindowClose(e); });
 		dispatcher.Dispatch<WindowResizeEvent>([&](WindowResizeEvent& e) { return OnWindowResize(e); });
+
+		for (auto it = m_LayerStack.rbegin(); it != m_LayerStack.rend(); ++it) {
+			if (e.IsHandled())
+				break;
+			(*it)->OnEvent(e);
+		}
 	}
 
 	bool Application::OnWindowClose(WindowCloseEvent& e) {

@@ -4,6 +4,7 @@
 #include <common/includes.h>
 
 #include "Event.h"
+#include "LayerStack.h"
 #include <platform/Window.h>
 
 #include "events/WindowEvent.h"
@@ -30,6 +31,8 @@ namespace Chopper {
 		std::unique_ptr<Window> m_Window;
 		bool m_Running = true;
 		bool m_Suspended = false;
+
+		LayerStack m_LayerStack;
 
 		static Application* s_Instance;
 	};

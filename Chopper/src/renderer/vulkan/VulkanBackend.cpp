@@ -140,17 +140,17 @@ namespace Chopper {
 		CHOPPER_LOG_DEBUG("Vulkan Debug Messenger created successfully.");
 #endif
 
-		GLFWwindow* window = static_cast<GLFWwindow*>(Application::Get().GetWindow().GetNativeWindow());
+		Window& window = Application::Get().GetWindow();
+		GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(window.GetNativeWindow());
 		VK_MSG_CHECK(
-			glfwCreateWindowSurface(instance, window, allocator, &surface),
+			glfwCreateWindowSurface(instance, glfwWindow, allocator, &surface),
 			"Failed to create Window Surface!"
 		);
 		CHOPPER_LOG_DEBUG("Vulkan Window Surface created successfully.");
 
 		VulkanContext::CreateDevice();
 
-		int w, h;
-		glfwGetFramebufferSize(window, &w, &h);
+		int w = window.GetWidth(), h = window.GetHeight();
 		VulkanContext::SetFramebufferSize(w, h);
 		VulkanContext::CreateSwapchain(w, h);
 

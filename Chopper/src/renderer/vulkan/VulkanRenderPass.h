@@ -19,7 +19,8 @@ namespace Chopper {
 		void CreateRenderPass(
 			VkRect2D renderArea,
 			VkClearColorValue clearColor,
-			float depth, int stencil
+			float depth, int stencil,
+			bool addDepthAtt
 		);
 		void ReleaseRenderPass();
 

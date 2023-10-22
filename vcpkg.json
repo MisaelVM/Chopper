@@ -4,13 +4,21 @@
   "version-string": "0.1.0",
   "dependencies": [
     "spdlog",
-    "glfw3"
+    "glfw3",
+    {
+      "name": "imgui",
+      "features": [ "docking-experimental", "glfw-binding" ]
+    }
   ],
   "features": {
     "vulkan-backend": {
       "description": "Vulkan Renderer Backend",
       "dependencies": [
-        "vulkan"
+        "vulkan",
+        {
+          "name": "imgui",
+          "features": [ "vulkan-binding" ]
+        }
       ]
     }
   }

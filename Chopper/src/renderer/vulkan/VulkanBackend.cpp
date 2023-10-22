@@ -10,6 +10,9 @@
 #include <core/Logger.h>
 #include <core/Application.h> // TODO: Don't think this is a good thing to do
 
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+
 namespace Chopper {
 
 	// static VulkanContext s_Context{};
@@ -168,6 +171,33 @@ namespace Chopper {
 
 		VulkanContext::SetupCommandBuffers();
 
+		std::array<VkDescriptorPoolSize, 11> poolSizes{};
+		poolSizes[0]  = { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 };
+		poolSizes[1]  = { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 };
+		poolSizes[2]  = { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 };
+		poolSizes[3]  = { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 };
+		poolSizes[4]  = { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 };
+		poolSizes[5]  = { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 };
+		poolSizes[6]  = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 };
+		poolSizes[7]  = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 };
+		poolSizes[8]  = { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 };
+		poolSizes[9]  = { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 };
+		poolSizes[10] = { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 };
+
+		VkDescriptorPoolCreateInfo descriptorPoolCreateInfo{};
+		descriptorPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		descriptorPoolCreateInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		descriptorPoolCreateInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+		descriptorPoolCreateInfo.pPoolSizes = poolSizes.data();
+		descriptorPoolCreateInfo.maxSets = 1000 * static_cast<uint32_t>(poolSizes.size());
+
+		VkDescriptorPool& descriptorPool = VulkanContext::GetDescriptorPool();
+		VK_MSG_CHECK(
+			vkCreateDescriptorPool(VulkanContext::GetDevice()->Logical(), &descriptorPoolCreateInfo, allocator, &descriptorPool),
+			"Failed to create Vulkan Descriptor Pool!"
+		);
+		CHOPPER_LOG_DEBUG("Vulkan Descriptor Pool created successfully.");
+
 		VulkanContext::CreateSyncObjects();
 
 		CHOPPER_LOG_INFO("Vulkan Backend initialized successfully.");
@@ -179,11 +209,18 @@ namespace Chopper {
 		VkAllocationCallbacks*& allocator = VulkanContext::GetAllocator();
 		VkSurfaceKHR& surface = VulkanContext::GetSurface();
 		
+		VkDescriptorPool& descriptorPool = VulkanContext::GetDescriptorPool();
+
 		vkDeviceWaitIdle(VulkanContext::GetDevice()->Logical());
 
 		VulkanContext::ReleaseSyncObjtects();
 		VulkanContext::ReleaseRenderPass();
 		VulkanContext::DestroySwapchain();
+
+		CHOPPER_LOG_DEBUG("Destroying Vulkan Descriptor Pool...");
+		vkDestroyDescriptorPool(VulkanContext::GetDevice()->Logical(), descriptorPool, nullptr);
+		descriptorPool = VK_NULL_HANDLE;
+
 		VulkanContext::ReleaseDevice();
 
 		CHOPPER_LOG_DEBUG("Destroying Vulkan Window Surface...");
@@ -201,7 +238,7 @@ namespace Chopper {
 		instance = VK_NULL_HANDLE;
 	}
 
-	bool VulkanBackend::BeginFrame(float deltaTime) {
+	bool VulkanBackend::BeginFrame(float deltaTime, void* pImGuiDrawData) {
 		VkDevice device = VulkanContext::GetDevice()->Logical();
 
 		if (VulkanContext::IsSwapchainRecreating()) {
@@ -259,13 +296,16 @@ namespace Chopper {
 		VkRect2D renderArea{};
 		renderArea.offset = { 0, 0 };
 		renderArea.extent = { VulkanContext::GetFramebufferWidth(), VulkanContext::GetFramebufferHeight() };
+
 		VulkanContext::GetRenderPass()->SetRenderArea(renderArea);
 		VulkanContext::GetRenderPass()->Begin(VulkanContext::GetCurrentFramebuffer());
+
+		ImGui_ImplVulkan_RenderDrawData(static_cast<ImDrawData*>(pImGuiDrawData), commandBuffer);
 
 		return true;
 	}
 
-	bool VulkanBackend::EndFrame(float deltaTime) {
+	bool VulkanBackend::EndFrame(float deltaTime, void* pImGuiDrawData) {
 		VulkanContext::GetRenderPass()->End();
 
 		VulkanContext::EndCurrentCommandBuffer();
@@ -307,6 +347,9 @@ namespace Chopper {
 	}
 
 	void VulkanBackend::OnResize(uint32_t width, uint32_t height) {
+		if (width == VulkanContext::GetFramebufferWidth() && height == VulkanContext::GetFramebufferHeight())
+			return;
+
 		VulkanContext::SetFramebufferSize(width, height);
 		VulkanContext::SetSwapchainRecreating(true);
 	}

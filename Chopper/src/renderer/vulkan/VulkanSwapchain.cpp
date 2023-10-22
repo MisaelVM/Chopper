@@ -27,7 +27,6 @@ namespace Chopper {
 		auto swapchainSupport = device->QuerySwapchainSupport(device->Physical(), VulkanContext::GetSurface(), true);
 
 		VkExtent2D extent = {width, height};
-		m_MaxFramesInFlight = 2;
 
 		std::vector<VkSurfaceFormatKHR> formats = swapchainSupport.Formats;
 		m_SurfaceFormat = formats[0];
@@ -100,6 +99,7 @@ namespace Chopper {
 		vkGetSwapchainImagesKHR(device->Logical(), m_Swapchain, &imageCount, nullptr);
 		m_SwapchainImages.resize(imageCount);
 		vkGetSwapchainImagesKHR(device->Logical(), m_Swapchain, &imageCount, m_SwapchainImages.data());
+		m_MaxFramesInFlight = imageCount;
 
 		m_SwapchainImageViews.resize(imageCount);
 		for (uint32_t i = 0; i < imageCount; ++i) {
@@ -206,7 +206,8 @@ namespace Chopper {
 			m_Framebuffers[i].Create(
 				VulkanContext::GetFramebufferWidth(),
 				VulkanContext::GetFramebufferHeight(),
-				{ m_SwapchainImageViews[i], m_DepthAttachment.GetView() }
+				//{ m_SwapchainImageViews[i], m_DepthAttachment.GetView() }
+				{ m_SwapchainImageViews[i] } // TODO: Temporary. Just for the sake of ImGui integration
 			);
 		}
 		CHOPPER_LOG_DEBUG("Vulkan Swapchain Framebuffers created successfully.");

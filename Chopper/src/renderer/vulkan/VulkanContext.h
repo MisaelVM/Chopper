@@ -25,6 +25,8 @@ namespace Chopper {
 		static VulkanSwapchain* GetSwapchain();
 		static VulkanRenderPass* GetRenderPass();
 
+		static VkDescriptorPool& GetDescriptorPool();
+
 		static bool CreateDevice();
 		static void ReleaseDevice();
 
@@ -78,6 +80,8 @@ namespace Chopper {
 		static VulkanRenderPass s_RenderPass;
 
 		static std::vector<VulkanCommandBuffer> s_CommandBuffers;
+
+		static VkDescriptorPool s_DescriptorPool;
 
 		static std::vector<VkSemaphore> s_ImageAvailableSemaphores;
 		static std::vector<VkSemaphore> s_RenderFinishedSemaphores;

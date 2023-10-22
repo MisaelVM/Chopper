@@ -22,11 +22,12 @@ namespace Chopper {
 
 		bool result = Renderer::Init(RENDERER_VULKAN_BACKEND);
 		CHOPPER_ASSERT(result, "Renderer could not be initialized!");
+
+		m_ImGuiLayer = new ImGuiLayer;
+		PushOverlay(m_ImGuiLayer);
 	}
 
-	Application::~Application() {
-		Renderer::Shutdown(); // TODO: Check this WILL work
-	}
+	Application::~Application() { }
 
 	void Application::Run() {
 		while (m_Running) {
@@ -38,8 +39,21 @@ namespace Chopper {
 			for (Layer* layer : m_LayerStack)
 				layer->OnUpdate(0);
 
-			Renderer::DrawFrame();
+			m_ImGuiLayer->Begin();
+			for (Layer* layer : m_LayerStack)
+				layer->OnImGuiRender();
+			m_ImGuiLayer->End();
 		}
+	}
+
+	void Application::PushLayer(Layer* layer) {
+		m_LayerStack.PushLayer(layer);
+		layer->OnAttach();
+	}
+
+	void Application::PushOverlay(Layer* layer) {
+		m_LayerStack.PushOverlay(layer);
+		layer->OnAttach();
 	}
 
 	void Application::OnEvent(Event& e) {

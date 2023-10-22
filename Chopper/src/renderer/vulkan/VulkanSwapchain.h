@@ -19,6 +19,7 @@ namespace Chopper {
 
 		const VkSurfaceFormatKHR GetSurfaceFormat() const { return m_SurfaceFormat; }
 		const std::vector<VkImageView>& GetViews() const { return m_SwapchainImageViews; }
+		const uint32_t GetMaxFramesInFlight() const { return m_MaxFramesInFlight; }
 
 		void RegenerateFramebuffers();
 

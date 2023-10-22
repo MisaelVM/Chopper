@@ -14,6 +14,7 @@ namespace Chopper {
 	VulkanSwapchain VulkanContext::s_Swapchain{};
 	VulkanRenderPass VulkanContext::s_RenderPass{};
 	std::vector<VulkanCommandBuffer> VulkanContext::s_CommandBuffers{};
+	VkDescriptorPool VulkanContext::s_DescriptorPool = VK_NULL_HANDLE;
 	std::vector<VkSemaphore> VulkanContext::s_ImageAvailableSemaphores{};
 	std::vector<VkSemaphore> VulkanContext::s_RenderFinishedSemaphores{};
 	std::vector<VkFence> VulkanContext::s_InFlightFences{};
@@ -35,6 +36,8 @@ namespace Chopper {
 	VulkanSwapchain* VulkanContext::GetSwapchain() { return &s_Swapchain; }
 	VulkanRenderPass* VulkanContext::GetRenderPass() { return &s_RenderPass; }
 
+	VkDescriptorPool& VulkanContext::GetDescriptorPool() { return s_DescriptorPool; }
+
 	bool VulkanContext::CreateDevice() { return s_Device.CreateDevice(); }
 	void VulkanContext::ReleaseDevice() { s_Device.DestroyDevice(); }
 
@@ -43,7 +46,7 @@ namespace Chopper {
 	bool VulkanContext::RecreateSwapchain(uint32_t width, uint32_t height) { return s_Swapchain.RecreateSwapchain(width, height); }
 
 	void VulkanContext::CreateRenderPass(VkRect2D renderArea, VkClearColorValue clearColor, float depth, int stencil) {
-		s_RenderPass.CreateRenderPass(renderArea, clearColor, depth, stencil);
+		s_RenderPass.CreateRenderPass(renderArea, clearColor, depth, stencil, false);
 	}
 	void VulkanContext::ReleaseRenderPass() { s_RenderPass.ReleaseRenderPass(); }
 

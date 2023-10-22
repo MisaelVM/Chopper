@@ -5,6 +5,8 @@
 #include <core/Logger.h>
 #include <core/Asserts.h>
 
+#include <imgui/ImGuiLayer.h>
+
 #include "vulkan/VulkanBackend.h"
 
 namespace Chopper {
@@ -39,8 +41,8 @@ namespace Chopper {
 	}
 
 	bool Renderer::DrawFrame() {
-		if (s_RenderBackend->BeginFrame(0.0f)) {
-			bool result = s_RenderBackend->EndFrame(0.0f);
+		if (s_RenderBackend->BeginFrame(0.0f, nullptr)) {
+			bool result = s_RenderBackend->EndFrame(0.0f, nullptr);
 
 			if (!result) {
 				CHOPPER_LOG_ERROR("Failed to end drawing frame!");
@@ -49,6 +51,14 @@ namespace Chopper {
 		}
 
 		return true;
+	}
+
+	bool Renderer::BeginFrame(RenderData* renderData) {
+		return s_RenderBackend->BeginFrame(renderData->DeltaTime, renderData->ImGuiDrawData);
+	}
+
+	bool Renderer::EndFrame(RenderData* renderData) {
+		return s_RenderBackend->EndFrame(renderData->DeltaTime, renderData->ImGuiDrawData);
 	}
 
 	void Renderer::OnWindowResize(uint32_t width, uint32_t height) {

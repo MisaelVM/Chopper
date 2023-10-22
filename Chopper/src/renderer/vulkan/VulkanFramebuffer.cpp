@@ -6,7 +6,7 @@
 
 namespace Chopper {
 
-	void VulkanFramebuffer::Create(uint32_t width, uint32_t height, const std::array<VkImageView, 2>& attachments) {
+	void VulkanFramebuffer::Create(uint32_t width, uint32_t height, const std::vector<VkImageView>& attachments) {
 		VkFramebufferCreateInfo framebufferCreateInfo{};
 		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebufferCreateInfo.renderPass = VulkanContext::GetRenderPass()->GetHandle();

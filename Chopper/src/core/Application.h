@@ -6,6 +6,7 @@
 #include "Event.h"
 #include "LayerStack.h"
 #include <platform/Window.h>
+#include <imgui/ImGuiLayer.h>
 
 #include "events/WindowEvent.h"
 
@@ -17,6 +18,9 @@ namespace Chopper {
 		virtual ~Application();
 
 		void Run();
+
+		void PushLayer(Layer* layer);
+		void PushOverlay(Layer* layer);
 
 		void OnEvent(Event& e);
 
@@ -33,6 +37,7 @@ namespace Chopper {
 		bool m_Suspended = false;
 
 		LayerStack m_LayerStack;
+		ImGuiLayer* m_ImGuiLayer;
 
 		static Application* s_Instance;
 	};

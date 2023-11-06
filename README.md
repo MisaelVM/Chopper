@@ -1,7 +1,7 @@
 # Chopper Engine
 
 ## Overview
-Chopper Engine is a evolving C++ game engine currently in the early stages of development. With a vision to evolve into a versatile and high-performance framework, Chopper Engine aims to harness the capabilities of Vulkan as its initial backend renderer, with plans to incorporate support for additional renderers in the future. Although not yet feature-complete, the project is dedicated to establishing a robust foundation for game development, emphasizing flexibility and performance.
+Chopper Engine is an evolving C++ game engine currently in the early stages of development. With a vision to evolve into a versatile and high-performance framework, Chopper Engine aims to harness the capabilities of Vulkan as its initial backend renderer, with plans to incorporate support for additional renderers in the future. Although not yet feature-complete, the project is dedicated to establishing a robust foundation for game development, emphasizing flexibility and performance.
 
 ## Requirements
 - Microsoft Visual Studio 2022
